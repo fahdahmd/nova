@@ -22,6 +22,10 @@ PACKAGE_ROOT = Path(__file__).resolve().parent
 WhisperSize = Literal["tiny", "base", "small", "medium", "large-v3"]
 ComputeType = Literal["int8", "int8_float16", "float16", "float32"]
 
+# Tokens held back from the context window for the system prompt, the tool
+# schemas, the tool results and the reply itself.
+CONTEXT_RESERVE_TOKENS = 2800
+
 
 class AppCommand(BaseModel):
     """A whitelisted application mapped to a fixed argument vector."""
@@ -95,12 +99,15 @@ class Settings(BaseSettings):
     ollama_host: str = "http://127.0.0.1:11434"
     ollama_model: str = "qwen3.5:4b"
     ollama_timeout_s: float = Field(default=120.0, gt=0, le=600)
+    ollama_keep_alive: str = Field(default="30m", min_length=1, max_length=16)
+    """How long Ollama keeps the model resident. Reloading it costs several
+    seconds plus a full prompt re-evaluation, so idling it out is expensive."""
     ollama_think: bool = False
     """Thinking is off by default for latency; turn it on for harder questions."""
     temperature: float = Field(default=0.2, ge=0.0, le=2.0)
     top_p: float = Field(default=0.9, ge=0.0, le=1.0)
-    num_ctx: int = Field(default=8192, ge=512, le=131072)
-    context_token_budget: int = Field(default=3500, ge=256, le=120000)
+    num_ctx: int = Field(default=4096, ge=512, le=131072)
+    context_token_budget: int = Field(default=1200, ge=256, le=120000)
     max_tool_iterations: int = Field(default=4, ge=1, le=10)
     tool_timeout_s: float = Field(default=20.0, gt=0, le=120)
     history_turns: int = Field(default=12, ge=1, le=100)
@@ -214,6 +221,16 @@ class Settings(BaseSettings):
     def _coherent(self) -> Settings:
         if self.vad_min_speech_ms > self.max_audio_seconds * 1000:
             raise ValueError("vad_min_speech_ms exceeds max_audio_seconds")
+        # The tool schemas and the system prompt occupy roughly 2,300 tokens
+        # before any history, and the reply needs room to generate. If the
+        # history budget eats the rest, the runtime silently drops the system
+        # prompt off the front of the window.
+        if self.context_token_budget > self.num_ctx - CONTEXT_RESERVE_TOKENS:
+            raise ValueError(
+                f"context_token_budget ({self.context_token_budget}) leaves no room in a "
+                f"{self.num_ctx}-token window: keep it at or below "
+                f"{self.num_ctx - CONTEXT_RESERVE_TOKENS}, or raise num_ctx"
+            )
         if (self.weather_latitude is None) != (self.weather_longitude is None):
             raise ValueError("weather_latitude and weather_longitude must be set together")
         return self

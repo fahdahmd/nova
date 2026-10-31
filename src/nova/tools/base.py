@@ -84,6 +84,37 @@ class NoArgs(BaseModel):
     model_config = {"extra": "forbid"}
 
 
+# Keys pydantic emits that teach the model nothing but still cost prompt
+# tokens on every single call. Every tool schema is sent on every turn, so
+# this is the cheapest token saving available.
+_NOISE_KEYS = frozenset({"title"})
+
+# Keys whose value is a mapping of *names* to schemas. The names are real
+# arguments and must survive, even when an argument is itself called "title".
+_NAME_MAPS = frozenset({"properties", "$defs", "definitions", "patternProperties"})
+
+
+def strip_schema_noise(node: Any) -> Any:
+    """Recursively drop decorative keys from a JSON schema.
+
+    Only schema *annotations* are removed. An argument named ``title`` keeps
+    its place, because its name lives in a ``properties`` mapping.
+    """
+    if isinstance(node, dict):
+        result: dict[str, Any] = {}
+        for key, value in node.items():
+            if key in _NOISE_KEYS:
+                continue
+            if key in _NAME_MAPS and isinstance(value, dict):
+                result[key] = {name: strip_schema_noise(schema) for name, schema in value.items()}
+            else:
+                result[key] = strip_schema_noise(value)
+        return result
+    if isinstance(node, list):
+        return [strip_schema_noise(item) for item in node]
+    return node
+
+
 class Tool(ABC):
     """Base class for all tools."""
 
@@ -95,8 +126,7 @@ class Tool(ABC):
     # ----------------------------------------------------------- description
     def schema(self) -> dict[str, Any]:
         """Ollama/OpenAI-style function schema for this tool."""
-        json_schema = self.args_model.model_json_schema()
-        json_schema.pop("title", None)
+        json_schema = strip_schema_noise(self.args_model.model_json_schema())
         json_schema.setdefault("type", "object")
         # Inline $defs so small models never have to resolve a $ref.
         return {

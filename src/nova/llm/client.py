@@ -130,6 +130,10 @@ class OllamaClient:
             "messages": list(messages),
             "stream": True,
             "options": self._options(),
+            # Without this, Ollama unloads the model after a few idle minutes
+            # and the next message pays the reload plus a full prompt
+            # re-evaluation - measured at about 75 seconds on CPU.
+            "keep_alive": self._settings.ollama_keep_alive,
         }
         if tools:
             kwargs["tools"] = list(tools)
@@ -186,7 +190,7 @@ class OllamaClient:
                 model=self._settings.ollama_model,
                 messages=[{"role": "user", "content": "hi"}],
                 options={"num_predict": 1, "num_ctx": 512},
-                keep_alive="10m",
+                keep_alive=self._settings.ollama_keep_alive,
             )
             log.info("ollama.warm")
         except (LlmError, ollama.ResponseError, ollama.RequestError, OSError) as exc:

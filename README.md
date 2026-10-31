@@ -252,8 +252,9 @@ Everything is set through environment variables (or a `.env` file), all prefixed
 | `NOVA_OLLAMA_HOST` | `http://127.0.0.1:11434` | Where Ollama is listening |
 | `NOVA_OLLAMA_THINK` | `false` | Extended thinking. Off for speed; on for hard questions |
 | `NOVA_TEMPERATURE` | `0.2` | Low, so tool calls stay reliable |
-| `NOVA_NUM_CTX` | `8192` | Context window passed to Ollama |
-| `NOVA_CONTEXT_TOKEN_BUDGET` | `3500` | How much history is kept per turn |
+| `NOVA_NUM_CTX` | `4096` | Context window. Smaller means faster prompt processing |
+| `NOVA_CONTEXT_TOKEN_BUDGET` | `1200` | History kept per turn. Must be `<= num_ctx - 2800` |
+| `NOVA_OLLAMA_KEEP_ALIVE` | `30m` | How long Ollama keeps the model resident. Short values cost a reload |
 | `NOVA_MAX_TOOL_ITERATIONS` | `4` | Hard cap on the tool loop |
 | `NOVA_TOOL_TIMEOUT_S` | `20` | Per-tool timeout |
 | `NOVA_HISTORY_TURNS` | `12` | Conversation turns considered for context |
