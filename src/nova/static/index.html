@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>{{APP_NAME}}</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#composer-input">Skip to the message box</a>
+
+  <div class="app" id="app">
+    <!-- ───────────────────────────── header ───────────────────────────── -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <h1 class="brand-name" id="app-name">{{APP_NAME}}</h1>
+        <span class="brand-sub" id="model-label">local</span>
+      </div>
+
+      <div class="topbar-actions">
+        <p class="conn" id="connection" data-state="connecting">
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span class="conn-text">Connecting</span>
+        </p>
+
+        <button class="icon-btn" id="theme-toggle" type="button"
+                aria-label="Switch to light theme" title="Toggle theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path class="icon-moon" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />
+            <g class="icon-sun">
+              <circle cx="12" cy="12" r="4.2" />
+              <path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M19.1 4.9l-1.9 1.9M6.8 17.2l-1.9 1.9" />
+            </g>
+          </svg>
+        </button>
+
+        <button class="icon-btn" id="settings-toggle" type="button"
+                aria-label="Open settings" aria-expanded="false" title="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="3.2" />
+            <path d="M12 2.8v2.4M12 18.8v2.4M4.3 7.4l2 1.2M17.7 15.4l2 1.2M4.3 16.6l2-1.2M17.7 8.6l2-1.2" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ──────────────────────────── chat column ───────────────────────── -->
+    <main class="chat" aria-label="Conversation">
+      <section class="stage" aria-label="Assistant state">
+        <canvas id="orb" class="orb" width="320" height="160"
+                role="img" aria-label="Assistant activity visualiser"></canvas>
+        <p class="stage-state" id="state-label" aria-live="polite">Ready</p>
+      </section>
+
+      <div class="messages-wrap">
+        <ol class="messages" id="messages" aria-live="polite" aria-relevant="additions text"></ol>
+
+        <div class="empty-state" id="empty-state">
+          <h2>Everything stays on this machine</h2>
+          <p>Ask a question, or hold <kbd>Space</kbd> to talk.</p>
+          <ul class="suggestions" id="suggestions">
+            <li><button type="button" data-prompt="What's on my todo list?">What's on my todo list?</button></li>
+            <li><button type="button" data-prompt="Remind me in 20 minutes to take a break.">Remind me in 20 minutes to take a break</button></li>
+            <li><button type="button" data-prompt="What is 19 times 37 divided by 4?">What is 19 × 37 ÷ 4?</button></li>
+            <li><button type="button" data-prompt="Take a note: the spare key is in the blue tin.">Take a note for me</button></li>
+          </ul>
+        </div>
+      </div>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <label class="sr-only" for="composer-input">Message</label>
+        <textarea id="composer-input" class="composer-input" rows="1"
+                  placeholder="Ask anything, or hold Space to talk"
+                  maxlength="4000" enterkeyhint="send"></textarea>
+
+        <div class="composer-actions">
+          <button class="icon-btn danger" id="stop-btn" type="button"
+                  aria-label="Stop (Escape)" title="Stop" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="7" y="7" width="10" height="10" rx="2" />
+            </svg>
+          </button>
+
+          <button class="mic-btn" id="mic-btn" type="button"
+                  aria-label="Hold to talk" aria-pressed="false"
+                  title="Hold to talk (Space), or Ctrl+K">
+            <span class="mic-ring" aria-hidden="true"></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3Z" />
+              <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
+            </svg>
+          </button>
+
+          <button class="send-btn" id="send-btn" type="submit" aria-label="Send message">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M4 12h15M13 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+      </form>
+    </main>
+
+    <!-- ──────────────────────────── side panel ────────────────────────── -->
+    <aside class="side" aria-label="Lists">
+      <div class="tabs" role="tablist" aria-label="Side panel sections">
+        <button role="tab" id="tab-todos" aria-controls="panel-todos" aria-selected="true" class="tab">
+          Todos <span class="count" id="count-todos">0</span>
+        </button>
+        <button role="tab" id="tab-notes" aria-controls="panel-notes" aria-selected="false" class="tab" tabindex="-1">
+          Notes <span class="count" id="count-notes">0</span>
+        </button>
+        <button role="tab" id="tab-reminders" aria-controls="panel-reminders" aria-selected="false" class="tab" tabindex="-1">
+          Reminders <span class="count" id="count-reminders">0</span>
+        </button>
+        <button role="tab" id="tab-activity" aria-controls="panel-activity" aria-selected="false" class="tab" tabindex="-1">
+          Activity
+        </button>
+      </div>
+
+      <div class="panel" id="panel-todos" role="tabpanel" aria-labelledby="tab-todos" tabindex="0">
+        <form class="quick-add" id="todo-form">
+          <label class="sr-only" for="todo-input">New todo</label>
+          <input id="todo-input" type="text" placeholder="Add a task" maxlength="300" />
+          <button type="submit" class="ghost-btn">Add</button>
+        </form>
+        <ul class="list" id="todos-list"></ul>
+      </div>
+
+      <div class="panel" id="panel-notes" role="tabpanel" aria-labelledby="tab-notes" tabindex="0" hidden>
+        <form class="quick-add" id="note-form">
+          <label class="sr-only" for="note-input">New note title</label>
+          <input id="note-input" type="text" placeholder="Note title" maxlength="120" />
+          <button type="submit" class="ghost-btn">Add</button>
+        </form>
+        <ul class="list" id="notes-list"></ul>
+      </div>
+
+      <div class="panel" id="panel-reminders" role="tabpanel" aria-labelledby="tab-reminders" tabindex="0" hidden>
+        <p class="panel-hint">Ask in plain words: &ldquo;remind me tomorrow at 9am to call the bank&rdquo;.</p>
+        <ul class="list" id="reminders-list"></ul>
+      </div>
+
+      <div class="panel" id="panel-activity" role="tabpanel" aria-labelledby="tab-activity" tabindex="0" hidden>
+        <div class="panel-head">
+          <p class="panel-hint">Every tool call, newest first.</p>
+          <button type="button" class="ghost-btn" id="clear-audit">Clear</button>
+        </div>
+        <ul class="list audit" id="audit-list"></ul>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ───────────────────────────── settings ──────────────────────────── -->
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <section class="drawer" id="settings-drawer" aria-label="Settings" aria-hidden="true" hidden>
+    <header class="drawer-head">
+      <h2>Settings</h2>
+      <button class="icon-btn" id="settings-close" type="button" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="drawer-body">
+      <fieldset class="group">
+        <legend>Voice</legend>
+
+        <div class="field switch-field">
+          <label for="set-voice-enabled">Speak replies aloud</label>
+          <input type="checkbox" id="set-voice-enabled" class="switch" checked />
+        </div>
+
+        <div class="field switch-field">
+          <label for="set-muted">Mute output</label>
+          <input type="checkbox" id="set-muted" class="switch" />
+        </div>
+
+        <div class="field">
+          <label for="set-rate">Speech rate <output id="rate-value">1.0×</output></label>
+          <input type="range" id="set-rate" min="0.6" max="1.6" step="0.1" value="1" />
+        </div>
+
+        <div class="field switch-field">
+          <label for="set-hands-free">Hands-free mode (stops on silence)</label>
+          <input type="checkbox" id="set-hands-free" class="switch" />
+        </div>
+
+        <p class="field-note" id="voice-note"></p>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Model</legend>
+        <div class="field switch-field">
+          <label for="set-thinking">Extended thinking (slower, better at hard questions)</label>
+          <input type="checkbox" id="set-thinking" class="switch" />
+        </div>
+        <dl class="facts" id="model-facts"></dl>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Memory</legend>
+        <p class="panel-hint">Facts {{APP_NAME}} has been asked to remember.</p>
+        <ul class="list compact" id="memory-list"></ul>
+        <button type="button" class="ghost-btn danger" id="clear-memory">Forget everything</button>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Access</legend>
+        <p class="panel-hint">Readable folders</p>
+        <ul class="list compact mono" id="roots-list"></ul>
+        <p class="panel-hint">Launchable apps</p>
+        <ul class="list compact mono" id="apps-list"></ul>
+        <p class="field-note">Both lists are set in <code>.env</code> and cannot be changed from here.</p>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Conversation</legend>
+        <button type="button" class="ghost-btn danger" id="clear-chat">Clear chat history</button>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────── confirmation ───────────────────────── -->
+  <dialog class="confirm" id="confirm-dialog" aria-labelledby="confirm-title">
+    <form method="dialog" id="confirm-form">
+      <h2 id="confirm-title">Confirm this action</h2>
+      <p class="confirm-risk"><span class="risk-badge" id="confirm-risk">sensitive</span>
+        <span id="confirm-tool" class="mono"></span></p>
+      <p class="confirm-prompt" id="confirm-prompt"></p>
+      <p class="confirm-warning" id="confirm-warning" hidden>
+        This was requested after reading external content. Check it carefully.
+      </p>
+      <dl class="facts" id="confirm-args"></dl>
+      <menu class="confirm-actions">
+        <button type="submit" value="deny" class="ghost-btn" id="confirm-deny">Decline</button>
+        <button type="submit" value="approve" class="primary-btn" id="confirm-approve">Approve</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <div class="toasts" id="toasts" aria-live="assertive" aria-atomic="false"></div>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
