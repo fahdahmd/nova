@@ -76,8 +76,13 @@ jobs:
           uv venv --python 3.12
           uv pip install -e ".[dev]"
 
+      # Audit the pinned requirement files rather than the installed
+      # environment: --strict treats any skipped package as a failure, and the
+      # local editable project itself can never be looked up on PyPI.
       - name: pip-audit
-        run: .venv/bin/pip-audit --strict --progress-spinner off
+        run: |
+          .venv/bin/pip-audit --strict --progress-spinner off \
+            -r requirements.txt -r requirements-dev.txt
 
   secrets:
     name: secret scan
