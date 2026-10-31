@@ -36,25 +36,28 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-
-      - name: Install the project
-        run: uv pip install --system -e ".[dev]"
-
-      - name: Ruff (lint and format check)
+      # A virtual environment, not --system: the runner's own Python is
+      # externally managed (PEP 668) and refuses installs.
+      - name: Create the environment
         run: |
-          ruff check src tests scripts
-          ruff format --check src tests scripts
+          uv python install ${{ matrix.python-version }}
+          uv venv --python ${{ matrix.python-version }}
+          uv pip install -e ".[dev]"
+
+      - name: Ruff (lint)
+        run: .venv/bin/ruff check src tests scripts
+
+      - name: Ruff (format check)
+        run: .venv/bin/ruff format --check src tests scripts
 
       - name: Mypy (strict)
-        run: mypy
+        run: .venv/bin/mypy
 
       - name: Bandit (security lint)
-        run: bandit -c pyproject.toml -r src -q
+        run: .venv/bin/bandit -c pyproject.toml -r src -q
 
       - name: Pytest
-        run: pytest -q --cov=nova --cov-report=term-missing
+        run: .venv/bin/pytest -q --cov=nova --cov-report=term-missing
 
   audit:
     name: dependency audit
@@ -67,14 +70,14 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up Python
-        run: uv python install 3.12
-
-      - name: Install the project
-        run: uv pip install --system -e ".[dev]"
+      - name: Create the environment
+        run: |
+          uv python install 3.12
+          uv venv --python 3.12
+          uv pip install -e ".[dev]"
 
       - name: pip-audit
-        run: pip-audit --strict --progress-spinner off
+        run: .venv/bin/pip-audit --strict --progress-spinner off
 
   secrets:
     name: secret scan
@@ -84,10 +87,47 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Create the environment
+        run: |
+          uv python install 3.12
+          uv venv --python 3.12
+          uv pip install detect-secrets
+
+      # detect-secrets over every tracked file. The gitleaks pre-commit hook
+      # covers commit time; this is the gate that cannot be skipped.
+      - name: Scan tracked files for secrets
+        run: |
+          git ls-files -z | xargs -0 .venv/bin/detect-secrets scan > secrets.json
+          .venv/bin/python - <<'PY'
+          import json
+          import sys
+
+          with open("secrets.json", encoding="utf-8") as handle:
+              results = json.load(handle).get("results", {})
+
+          if not results:
+              print("No potential secrets found in tracked files.")
+              sys.exit(0)
+
+          for path, findings in sorted(results.items()):
+              for finding in findings:
+                  print(f"{path}:{finding.get('line_number')}  {finding.get('type')}")
+          print(f"\n{len(results)} file(s) flagged.", file=sys.stderr)
+          sys.exit(1)
+          PY
+
+      - name: Fail if a .env or database is tracked
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$|\.db$|\.sqlite3?$'; then
+            echo "A secret or database file is tracked." >&2
+            exit 1
+          fi
+          echo "No .env or database files are tracked."
 
   startup:
     name: smoke test the app
@@ -100,11 +140,11 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up Python
-        run: uv python install 3.12
-
-      - name: Install the project
-        run: uv pip install --system -e ".[dev]"
+      - name: Create the environment
+        run: |
+          uv python install 3.12
+          uv venv --python 3.12
+          uv pip install -e ".[dev]"
 
       - name: Start the app and check it serves
         env:
@@ -112,10 +152,11 @@ jobs:
           NOVA_OPEN_BROWSER: "false"
           NOVA_PORT: "8765"
         run: |
-          python -m nova &
+          .venv/bin/python -m nova &
           APP_PID=$!
+
           for _ in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8765/api/health > /dev/null; then break; fi
+            if curl -fsS http://127.0.0.1:8765/api/health > /dev/null 2>&1; then break; fi
             sleep 1
           done
 
@@ -133,4 +174,10 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example.com' \
             -H "X-Nova-Token: $NOVA_AUTH_TOKEN" http://127.0.0.1:8765/api/state)" = "400"
 
+          echo "--- and refuse a wrong token ---"
+          test "$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "X-Nova-Token: wrong_token_wrong_token_wrong_12" \
+            http://127.0.0.1:8765/api/state)" = "401"
+
+          echo "all checks passed"
           kill $APP_PID
