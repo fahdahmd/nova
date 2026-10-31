@@ -55,8 +55,7 @@ def download(url: str, destination: Path) -> None:
                 if total:
                     percent = written * 100 // total
                     print(
-                        f"\r  {destination.name}: {percent:3d}%  "
-                        f"({written / 1_048_576:.1f} MB)",
+                        f"\r  {destination.name}: {percent:3d}%  ({written / 1_048_576:.1f} MB)",
                         end="",
                         flush=True,
                     )
