@@ -1,0 +1,5 @@
+"""Nova - a fully local, privacy-first voice and text personal AI assistant."""
+
+__version__ = "1.0.0"
+
+__all__ = ["__version__"]
