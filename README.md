@@ -144,7 +144,7 @@ ollama pull qwen3.5:4b
 ### 2. Install Nova
 
 ```bash
-git clone https://github.com/Fahad28may/nova.git
+git clone https://github.com/fahdahmd/nova.git
 cd nova
 
 # with uv (recommended)

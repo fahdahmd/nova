@@ -5,7 +5,7 @@
 Please **do not open a public issue** for a security problem.
 
 Report it privately through GitHub's
-[security advisory form](https://github.com/Fahad28may/nova/security/advisories/new),
+[security advisory form](https://github.com/fahdahmd/nova/security/advisories/new),
 which is visible only to the maintainer.
 
 Please include:

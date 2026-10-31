@@ -68,9 +68,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Fahad28may/nova"
-Repository = "https://github.com/Fahad28may/nova"
-Issues = "https://github.com/Fahad28may/nova/issues"
+Homepage = "https://github.com/fahdahmd/nova"
+Repository = "https://github.com/fahdahmd/nova"
+Issues = "https://github.com/fahdahmd/nova/issues"
 
 [project.scripts]
 nova = "nova.__main__:main"
