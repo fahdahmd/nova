@@ -287,8 +287,7 @@ class Database:
     def add_reminder(self, text: str, due_at: datetime) -> Reminder:
         stamp = _iso(_now())
         reminder_id = self._insert(
-            "INSERT INTO reminders (text, due_at, created_at, status) "
-            "VALUES (?, ?, ?, 'pending')",
+            "INSERT INTO reminders (text, due_at, created_at, status) VALUES (?, ?, ?, 'pending')",
             (text, _iso(due_at), stamp),
         )
         return Reminder(

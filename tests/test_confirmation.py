@@ -191,9 +191,7 @@ def test_the_model_is_told_it_was_declined(harness: Any) -> None:
     runner.run("delete note 1")
 
     tool_replies = [
-        message
-        for message in runner.llm.calls[-1]["messages"]
-        if message.get("role") == "tool"
+        message for message in runner.llm.calls[-1]["messages"] if message.get("role") == "tool"
     ]
     assert tool_replies
     assert "not approved" in tool_replies[-1]["content"]
@@ -222,9 +220,7 @@ def test_every_risky_tool_requires_confirmation(
     assert runner.confirmations[0].risk == expected_risk
 
 
-def test_reading_outside_the_default_folder_asks_first(
-    harness: Any, second_root: Any
-) -> None:
+def test_reading_outside_the_default_folder_asks_first(harness: Any, second_root: Any) -> None:
     runner = harness(
         [call("files_read", path=str(second_root / "archive.md")), say("Here it is.")],
         approve=False,
@@ -438,9 +434,7 @@ def test_the_confirmation_round_trip_works_over_the_websocket(
         assert socket.receive_json()["type"] == "ready"
 
         session = next(iter(state.connections))
-        session._orchestrator._llm = FakeLlm(
-            [call("notes_delete", note_id=1), say("Deleted it.")]
-        )
+        session._orchestrator._llm = FakeLlm([call("notes_delete", note_id=1), say("Deleted it.")])
 
         socket.send_json({"type": "chat", "text": "delete note 1"})
 
@@ -454,9 +448,7 @@ def test_the_confirmation_round_trip_works_over_the_websocket(
         assert request["tool"] == "notes_delete"
         assert request["risk"] == "destructive"
 
-        socket.send_json(
-            {"type": "confirm", "request_id": request["request_id"], "approved": True}
-        )
+        socket.send_json({"type": "confirm", "request_id": request["request_id"], "approved": True})
 
         for _ in range(30):
             event = socket.receive_json()
@@ -466,18 +458,14 @@ def test_the_confirmation_round_trip_works_over_the_websocket(
     assert db.list_notes() == []
 
 
-def test_declining_over_the_websocket_leaves_data_alone(
-    client: TestClient, db: Database
-) -> None:
+def test_declining_over_the_websocket_leaves_data_alone(client: TestClient, db: Database) -> None:
     db.create_note("Keep me", "")
     state = client.app.state.nova  # type: ignore[attr-defined]
 
     with client.websocket_connect("/ws", headers=WS_HEADERS) as socket:
         socket.receive_json()
         session = next(iter(state.connections))
-        session._orchestrator._llm = FakeLlm(
-            [call("notes_delete", note_id=1), say("Left alone.")]
-        )
+        session._orchestrator._llm = FakeLlm([call("notes_delete", note_id=1), say("Left alone.")])
 
         socket.send_json({"type": "chat", "text": "delete note 1"})
 
@@ -505,8 +493,6 @@ def test_a_forged_confirmation_id_is_ignored(client: TestClient, db: Database) -
     """Nothing is released by a confirmation the server did not ask for."""
     with client.websocket_connect("/ws", headers=WS_HEADERS) as socket:
         socket.receive_json()
-        socket.send_json(
-            {"type": "confirm", "request_id": "not-a-real-request", "approved": True}
-        )
+        socket.send_json({"type": "confirm", "request_id": "not-a-real-request", "approved": True})
         socket.send_json({"type": "ping"})
         assert socket.receive_json()["type"] == "pong"

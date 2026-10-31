@@ -1,0 +1,20 @@
+# Normalise everything to LF in the repository.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF on checkout.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Shell scripts must stay LF, or they will not run.
+*.sh text eol=lf
+
+# Binaries are never touched.
+*.onnx binary
+*.bin binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+*.db binary
+*.wav binary

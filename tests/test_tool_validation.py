@@ -153,9 +153,7 @@ def test_read_only_local_tools_are_safe() -> None:
         assert tool.risk is RiskTier.SAFE
 
 
-def test_file_read_risk_depends_on_which_root(
-    tool_context: ToolContext, second_root: Path
-) -> None:
+def test_file_read_risk_depends_on_which_root(tool_context: ToolContext, second_root: Path) -> None:
     """Reading in the default folder is safe; elsewhere it needs confirmation."""
     tool = build_registry().get("files_read")
     assert tool is not None

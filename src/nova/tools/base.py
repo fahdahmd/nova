@@ -46,9 +46,7 @@ UNTRUSTED_NOTICE = (
 def wrap_untrusted(source: str, payload: str) -> str:
     """Fence third-party content so the model treats it as data, not orders."""
     cleaned = payload.replace("</untrusted_data>", "<\\/untrusted_data>")
-    return (
-        f'<untrusted_data source="{source}">\n{cleaned}\n</untrusted_data>\n{UNTRUSTED_NOTICE}'
-    )
+    return f'<untrusted_data source="{source}">\n{cleaned}\n</untrusted_data>\n{UNTRUSTED_NOTICE}'
 
 
 @dataclass(slots=True)
@@ -164,9 +162,7 @@ class ToolRegistry:
 
     def describe(self, settings: Settings) -> str:
         """One short line per tool, for the system prompt."""
-        return "\n".join(
-            f"- {tool.name}: {tool.description}" for tool in self.enabled(settings)
-        )
+        return "\n".join(f"- {tool.name}: {tool.description}" for tool in self.enabled(settings))
 
     def __len__(self) -> int:
         return len(self._tools)

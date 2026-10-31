@@ -175,9 +175,7 @@ class Session:
     # --------------------------------------------------------- text messages
     async def _on_text(self, raw: str) -> None:
         if len(raw.encode("utf-8")) > self._settings.max_ws_message_bytes:
-            await self.send_event(
-                ErrorOut(message="That message is too large.", code="too_large")
-            )
+            await self.send_event(ErrorOut(message="That message is too large.", code="too_large"))
             return
         try:
             self._message_limiter.check("messages")
@@ -306,9 +304,7 @@ class Session:
 
         seconds = len(pcm) / BYTES_PER_SECOND_16K
         if seconds < 0.25:
-            await self.send_event(
-                ErrorOut(message="That was too short to hear.", code="too_short")
-            )
+            await self.send_event(ErrorOut(message="That was too short to hear.", code="too_short"))
             await self.send_event(Status(state="idle"))
             return
 
@@ -333,9 +329,7 @@ class Session:
     # ------------------------------------------------------------------ turn
     async def _start_turn(self, text: str, *, speak: bool = False) -> None:
         if len(text) > self._settings.max_message_chars:
-            await self.send_event(
-                ErrorOut(message="That message is too long.", code="too_long")
-            )
+            await self.send_event(ErrorOut(message="That message is too long.", code="too_long"))
             return
         if self._turn_task is not None and not self._turn_task.done():
             await self.send_event(
@@ -493,4 +487,3 @@ async def broadcast_reminder(state: AppState, reminder: Reminder) -> None:
             await session.push_reminder(reminder)
         except Exception:  # one bad socket must not stop the rest
             state.connections.discard(session)
-

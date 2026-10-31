@@ -104,9 +104,7 @@ def db(settings: Settings) -> Iterator[Database]:
 
 @pytest.fixture
 def sandbox(settings: Settings) -> PathSandbox:
-    return PathSandbox(
-        roots=tuple(settings.allowed_roots), max_bytes=settings.max_file_bytes
-    )
+    return PathSandbox(roots=tuple(settings.allowed_roots), max_bytes=settings.max_file_bytes)
 
 
 @pytest.fixture

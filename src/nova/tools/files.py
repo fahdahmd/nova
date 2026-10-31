@@ -95,9 +95,7 @@ class ReadFile(Tool):
         except SandboxError:
             # The call will fail anyway; keep the stricter tier.
             return RiskTier.SENSITIVE
-        return (
-            RiskTier.SAFE if context.sandbox.is_in_default_root(resolved) else RiskTier.SENSITIVE
-        )
+        return RiskTier.SAFE if context.sandbox.is_in_default_root(resolved) else RiskTier.SENSITIVE
 
     def confirmation_prompt(self, args: BaseModel, context: ToolContext) -> str:
         del context

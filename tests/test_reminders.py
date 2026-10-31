@@ -128,13 +128,12 @@ def test_cancelling_marks_the_reminder_cancelled(tool_context: ToolContext) -> N
     cancel = registry.get("reminders_cancel")
     assert create is not None and cancel is not None
 
-    asyncio.run(create.run(create.parse_args({"text": "call bank", "when": "in 1 hour"}),
-                           tool_context))
+    asyncio.run(
+        create.run(create.parse_args({"text": "call bank", "when": "in 1 hour"}), tool_context)
+    )
     reminder = tool_context.db.list_reminders()[0]
 
-    result = asyncio.run(
-        cancel.run(cancel.parse_args({"reminder_id": reminder.id}), tool_context)
-    )
+    result = asyncio.run(cancel.run(cancel.parse_args({"reminder_id": reminder.id}), tool_context))
     assert result.ok is True
     assert tool_context.db.get_reminder(reminder.id).status == "cancelled"
     assert tool_context.db.list_reminders(pending_only=True) == []

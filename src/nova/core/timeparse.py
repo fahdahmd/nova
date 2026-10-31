@@ -174,8 +174,7 @@ def parse_future_time(text: str, *, now: datetime | None = None) -> datetime:
             combined = _split_date_and_time(raw, base)
             if combined is None:
                 raise TimeParseError(
-                    f"could not understand the time {raw!r}; "
-                    "try 'in 20 minutes' or 'tomorrow 9am'"
+                    f"could not understand the time {raw!r}; try 'in 20 minutes' or 'tomorrow 9am'"
                 )
             parsed = combined
         due = (

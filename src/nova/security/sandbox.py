@@ -230,9 +230,7 @@ class PathSandbox:
 
         root = self._root_for(resolved)
         if root is None:
-            raise SandboxError(
-                "path is outside the allowed folders: " + ", ".join(self.describe())
-            )
+            raise SandboxError("path is outside the allowed folders: " + ", ".join(self.describe()))
 
         relative_parts = resolved.relative_to(root).parts
 

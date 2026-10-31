@@ -74,9 +74,7 @@ class OpenApp(Tool):
         command = context.settings.allowed_apps.get(app_id)
         if command is None:
             available = ", ".join(sorted(context.settings.allowed_apps)) or "none"
-            return ToolResult.failure(
-                f"{args.app!r} is not whitelisted. Available: {available}"
-            )
+            return ToolResult.failure(f"{args.app!r} is not whitelisted. Available: {available}")
 
         argv = resolve_executable(list(command.argv))
         if argv is None:

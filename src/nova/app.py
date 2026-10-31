@@ -120,9 +120,7 @@ def create_app(settings: Settings | None = None, *, db: Database | None = None) 
     app.include_router(ws.router)
 
     @app.exception_handler(RequestValidationError)
-    async def on_validation_error(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
+    async def on_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
         log.info("request.invalid", path=request.url.path)
         return JSONResponse(
             status_code=422,

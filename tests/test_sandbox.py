@@ -36,9 +36,7 @@ def test_rejects_parent_directory_traversal(sandbox: PathSandbox, candidate: str
         sandbox.resolve(candidate)
 
 
-def test_rejects_absolute_path_outside_the_roots(
-    sandbox: PathSandbox, secret_dir: Path
-) -> None:
+def test_rejects_absolute_path_outside_the_roots(sandbox: PathSandbox, secret_dir: Path) -> None:
     with pytest.raises(SandboxError, match="outside the allowed folders"):
         sandbox.resolve(str(secret_dir / "passwords.txt"))
 

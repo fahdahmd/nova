@@ -88,9 +88,7 @@ class Weather(Tool):
             return ToolResult.failure("weather lookups are disabled in the settings")
 
         try:
-            async with httpx.AsyncClient(
-                timeout=REQUEST_TIMEOUT, follow_redirects=False
-            ) as client:
+            async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT, follow_redirects=False) as client:
                 if args.location:
                     place = await self._geocode(client, args.location)
                     if place is None:
@@ -99,8 +97,7 @@ class Weather(Tool):
                         )
                     latitude, longitude, label = place
                 elif (
-                    settings.weather_latitude is not None
-                    and settings.weather_longitude is not None
+                    settings.weather_latitude is not None and settings.weather_longitude is not None
                 ):
                     latitude = settings.weather_latitude
                     longitude = settings.weather_longitude
@@ -152,9 +149,7 @@ class Weather(Tool):
         )
 
     @staticmethod
-    async def _geocode(
-        client: httpx.AsyncClient, location: str
-    ) -> tuple[float, float, str] | None:
+    async def _geocode(client: httpx.AsyncClient, location: str) -> tuple[float, float, str] | None:
         response = await client.get(
             GEOCODE_URL,
             params={"name": location, "count": 1, "language": "en", "format": "json"},

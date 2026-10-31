@@ -50,7 +50,6 @@ def _replace_match(match: re.Match[str]) -> str:
     return f"{label}={_REDACTED}"
 
 
-
 def redact_processor(
     _logger: Any, _name: str, event_dict: structlog.types.EventDict
 ) -> structlog.types.EventDict:

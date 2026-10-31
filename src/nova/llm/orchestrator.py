@@ -91,9 +91,7 @@ class Orchestrator:
         self._db = db
         self._registry = registry
         self._llm = llm
-        self._context = ToolContext(
-            settings=settings, db=db, sandbox=sandbox, scheduler=scheduler
-        )
+        self._context = ToolContext(settings=settings, db=db, sandbox=sandbox, scheduler=scheduler)
 
     # ------------------------------------------------------------------ turn
     async def run_turn(
@@ -345,9 +343,7 @@ class Orchestrator:
 
         elapsed = int((time.perf_counter() - started) * 1000)
         await self._finish_call(tool, args, risk, result, elapsed, emit=emit)
-        return self._CallOutcome(
-            content=result.content, ran=result.ok, untrusted=result.untrusted
-        )
+        return self._CallOutcome(content=result.content, ran=result.ok, untrusted=result.untrusted)
 
     async def _finish_call(
         self,
