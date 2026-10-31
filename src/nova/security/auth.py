@@ -19,7 +19,7 @@ from fastapi import HTTPException, Request, status
 
 from nova.config import Settings
 
-TOKEN_HEADER: Final = "x-nova-token"
+TOKEN_HEADER: Final = "x-nova-token"  # noqa: S105 - a header name, not a secret
 SESSION_COOKIE: Final = "nova_session"
 QUERY_PARAM: Final = "token"
 

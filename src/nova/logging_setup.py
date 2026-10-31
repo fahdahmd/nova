@@ -41,8 +41,14 @@ _SENSITIVE_PATTERNS: tuple[re.Pattern[str], ...] = (
 
 def _scrub_text(value: str) -> str:
     for pattern in _SENSITIVE_PATTERNS:
-        value = pattern.sub(lambda m: f"{m.group(0).split('=')[0].split(':')[0]}={_REDACTED}", value)
+        value = pattern.sub(_replace_match, value)
     return value
+
+
+def _replace_match(match: re.Match[str]) -> str:
+    label = match.group(0).split("=")[0].split(":")[0].strip()
+    return f"{label}={_REDACTED}"
+
 
 
 def redact_processor(

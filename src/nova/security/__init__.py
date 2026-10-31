@@ -12,7 +12,7 @@ from nova.security.auth import (
 )
 from nova.security.headers import SecurityHeadersMiddleware, content_security_policy
 from nova.security.ratelimit import RateLimiter, RateLimitExceeded
-from nova.security.sandbox import SandboxError, PathSandbox
+from nova.security.sandbox import PathSandbox, SandboxError
 
 __all__ = [
     "SESSION_COOKIE",

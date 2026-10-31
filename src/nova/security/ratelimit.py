@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from threading import Lock
 
 
-class RateLimitExceeded(Exception):
+class RateLimitExceeded(Exception):  # noqa: N818 - conventional name for this condition
     """Raised when a key exhausts its allowance for the current window."""
 
     def __init__(self, key: str, retry_after: float) -> None:

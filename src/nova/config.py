@@ -247,7 +247,7 @@ class Settings(BaseSettings):
     def redacted(self) -> dict[str, object]:
         """Settings snapshot that is safe for logs and the settings UI."""
         data: dict[str, object] = self.model_dump(mode="json")
-        data["auth_token"] = "***redacted***"
+        data["auth_token"] = "***redacted***"  # noqa: S105 - placeholder, not a secret
         return data
 
 
