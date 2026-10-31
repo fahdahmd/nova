@@ -131,15 +131,12 @@ class Orchestrator:
         tainted = False
 
         try:
-            for iteration in range(settings.max_tool_iterations + 1):
-                final_iteration = iteration == settings.max_tool_iterations
-                if final_iteration:
-                    messages.append({"role": "system", "content": TOOL_BUDGET_NOTICE})
-
+            # Tool phase: bounded, so a confused model cannot loop forever.
+            for _ in range(settings.max_tool_iterations):
                 await emit(Status(state="thinking"))
                 text, calls = await self._stream(
                     messages,
-                    tools=None if final_iteration else schemas,
+                    tools=schemas,
                     emit=emit,
                     cancelled=cancelled,
                     think=think,
@@ -149,10 +146,7 @@ class Orchestrator:
                     return TurnResult(text=text, cancelled=True, tool_calls=used_tools)
 
                 if not calls:
-                    answer = text.strip()
-                    if answer:
-                        await asyncio.to_thread(self._db.add_message, "assistant", answer)
-                    return TurnResult(text=answer, tool_calls=used_tools)
+                    return await self._finalise(text, used_tools)
 
                 # The model asked for tools, so any streamed preamble is not the
                 # answer: tell the UI to drop it.
@@ -190,22 +184,59 @@ class Orchestrator:
                     if validation_retries > MAX_VALIDATION_RETRIES:
                         # Retried once already: drop the tools and just answer.
                         log.info("turn.tool_fallback", tools=used_tools)
-                        messages.append({"role": "system", "content": FALLBACK_NOTICE})
-                        await emit(Status(state="thinking", detail="answering directly"))
-                        text, _ = await self._stream(
-                            messages, tools=None, emit=emit, cancelled=cancelled, think=think
+                        return await self._answer_without_tools(
+                            messages,
+                            FALLBACK_NOTICE,
+                            used_tools,
+                            emit=emit,
+                            cancelled=cancelled,
+                            think=think,
+                            detail="answering directly",
                         )
-                        answer = text.strip()
-                        if answer:
-                            await asyncio.to_thread(self._db.add_message, "assistant", answer)
-                        return TurnResult(text=answer, tool_calls=used_tools)
 
-            return TurnResult(text="", tool_calls=used_tools)
+            # The tool budget is spent. Force one plain answer so the user is
+            # never left with silence.
+            log.info("turn.budget_exhausted", tools=used_tools)
+            return await self._answer_without_tools(
+                messages,
+                TOOL_BUDGET_NOTICE,
+                used_tools,
+                emit=emit,
+                cancelled=cancelled,
+                think=think,
+            )
 
         except LlmError as exc:
             log.warning("turn.llm_error", code=exc.code, error=str(exc))
             await emit(ErrorOut(message=exc.message, code=exc.code, hint=exc.hint))
             return TurnResult(error=exc.message, tool_calls=used_tools)
+
+    # ---------------------------------------------------------- answer paths
+    async def _finalise(self, text: str, used_tools: list[str]) -> TurnResult:
+        """Persist and return the assistant's answer for this turn."""
+        answer = text.strip()
+        if answer:
+            await asyncio.to_thread(self._db.add_message, "assistant", answer)
+        return TurnResult(text=answer, tool_calls=used_tools)
+
+    async def _answer_without_tools(
+        self,
+        messages: list[dict[str, Any]],
+        notice: str,
+        used_tools: list[str],
+        *,
+        emit: Emit,
+        cancelled: asyncio.Event,
+        think: bool | None,
+        detail: str = "",
+    ) -> TurnResult:
+        """Ask for a plain answer with no tools offered at all."""
+        messages.append({"role": "system", "content": notice})
+        await emit(Status(state="thinking", detail=detail))
+        text, _ = await self._stream(
+            messages, tools=None, emit=emit, cancelled=cancelled, think=think
+        )
+        return await self._finalise(text, used_tools)
 
     # --------------------------------------------------------------- streaming
     async def _stream(

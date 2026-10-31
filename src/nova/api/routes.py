@@ -83,7 +83,9 @@ async def index(
 ) -> Response:
     """Serve the app shell and establish the session cookie."""
     settings = state.settings
-    candidate = token or request.cookies.get(SESSION_COOKIE)
+    # Accept the token from the URL, the cookie or the header, like every
+    # other route, so a reload and an API call behave the same way.
+    candidate = token or extract_token(request)
     if not token_matches(candidate, settings.auth_token):
         return HTMLResponse(UNAUTHORISED_PAGE, status_code=status.HTTP_401_UNAUTHORIZED)
 

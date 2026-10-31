@@ -44,7 +44,7 @@ def _spawn(argv: list[str], env_extra: dict[str, str]) -> bool:
     """Launch a detached helper process with a fixed argument vector."""
     env = {**os.environ, **env_extra}
     try:
-        subprocess.Popen(  # noqa: S603 - argv is fixed, shell is never used
+        subprocess.Popen(  # noqa: S603  # nosec B603 - fixed argv, no shell
             argv,
             env=env,
             stdout=subprocess.DEVNULL,

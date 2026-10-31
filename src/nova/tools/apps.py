@@ -32,7 +32,7 @@ class OpenAppArgs(BaseModel):
 
 def _launch(argv: list[str]) -> None:
     """Start a detached process from a fixed argument vector."""
-    subprocess.Popen(  # noqa: S603 - argv comes from the config whitelist only
+    subprocess.Popen(  # noqa: S603  # nosec B603 - argv from the config whitelist
         argv,
         shell=False,
         stdout=subprocess.DEVNULL,
